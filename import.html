@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导入数据 - 飞行经历录入系统</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+        
+        .header {
+            margin-bottom: 30px;
+        }
+        
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9em;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            background: #e8f0fe;
+            border-color: #764ba2;
+        }
+        
+        .upload-area.dragover {
+            background: #e8f0fe;
+            border-color: #4caf50;
+        }
+        
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .format-info {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .format-info h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        
+        .format-info ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .format-info li {
+            color: #856404;
+            margin-bottom: 8px;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .format-info li:before {
+            content: "•";
+            position: absolute;
+            left: 10px;
+            font-size: 1.5em;
+        }
+        
+        .preview-table {
+            margin-top: 30px;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-link">← 返回首页</a>
+            <h1>📥 导入数据</h1>
+        </div>
+        
+        <div class="format-info">
+            <h3>Excel 导入格式说明</h3>
+            <ul>
+                <li>第一行必须为表头，包含以下列（顺序可调整）：</li>
+                <li>日期、航空器型号、航空器登记号、起飞站、降落站、开车时刻、关车时刻、总时间、机长、副驾驶、仪表、机长转场、副驾驶转场、夜航、飞行种类、着陆次数(昼间)、着陆次数(夜间)、机组成员、救助人数、SPIC、备注</li>
+                <li>时间格式：HH:MM（如 01:30）</li>
+                <li>日期格式：YYYY-MM-DD、YYYY/MM/DD、YYYY年MM月DD日或Excel日期格式</li>
+                <li>仪表和夜航：填写时间格式 HH:MM（如 00:30）</li>
+                <li>建议使用模板文件，确保格式正确</li>
+            </ul>
+            <button class="btn btn-primary" onclick="downloadTemplate()" style="margin-top: 15px;">📥 下载导入模板</button>
+        </div>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📄</div>
+            <div class="upload-text">拖拽 Excel 文件到此处，或点击选择文件</div>
+            <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">选择文件</button>
+            <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFileSelect(event)">
+        </div>
+        
+        <div id="preview" class="preview-table" style="display: none;">
+            <h3>数据预览（前5条）</h3>
+            <table id="previewTable">
+                <thead id="previewHead"></thead>
+                <tbody id="previewBody"></tbody>
+            </table>
+            <button class="btn btn-primary" onclick="importData()" style="margin-top: 20px;">确认导入</button>
+        </div>
+        
+        <div id="successMessage" class="success-message"></div>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+    
+    <script>
+        let parsedData = [];
+        
+        // 拖拽上传
+        const uploadArea = document.getElementById('uploadArea');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+        
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+        
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    if (jsonData.length === 0) {
+                        showError('Excel 文件为空');
+                        return;
+                    }
+                    
+                    parsedData = jsonData;
+                    showPreview(jsonData);
+                } catch (error) {
+                    showError('文件读取失败: ' + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function showPreview(data) {
+            const preview = document.getElementById('preview');
+            const previewHead = document.getElementById('previewHead');
+            const previewBody = document.getElementById('previewBody');
+            
+            // 显示表头
+            const headers = Object.keys(data[0]);
+            previewHead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+            
+            // 显示前5条数据
+            previewBody.innerHTML = data.slice(0, 5).map(row => {
+                return '<tr>' + headers.map(h => `<td>${row[h] || ''}</td>`).join('') + '</tr>';
+            }).join('');
+            
+            preview.style.display = 'block';
+            hideMessages();
+        }
+        
+        function importData() {
+            if (parsedData.length === 0) {
+                showError('没有可导入的数据');
+                return;
+            }
+            
+            const existingRecords = JSON.parse(localStorage.getItem('flightRecords') || '[]');
+            let importedCount = 0;
+            let errorCount = 0;
+            
+            parsedData.forEach((row, index) => {
+                try {
+                    // 映射Excel列到系统字段（按照新顺序）
+                    const record = {
+                        id: Date.now() + index,
+                        // 1. 日期
+                        date: formatDate(row['日期'] || row['date']),
+                        // 2. 航空器型号
+                        aircraftType: row['航空器型号'] || row['机型'] || row['aircraftType'] || '',
+                        // 3. 航空器登记号
+                        aircraftReg: row['航空器登记号'] || row['登记号'] || row['aircraftReg'] || '',
+                        // 4. 起飞站
+                        departure: row['起飞站'] || row['departure'] || '',
+                        // 5. 降落站
+                        arrival: row['降落站'] || row['arrival'] || '',
+                        // 6. 开车时刻
+                        engineStart: row['开车时刻'] || row['engineStart'] || '',
+                        // 7. 关车时刻
+                        engineStop: row['关车时刻'] || row['engineStop'] || '',
+                        // 8. 总时间
+                        totalTime: formatTime(row['总时间'] || row['totalTime']),
+                        // 9. 机长
+                        captain: row['机长'] || row['captain'] || '',
+                        // 10. 副驾驶
+                        copilot: row['副驾驶'] || row['copilot'] || '',
+                        // 11. 仪表（时间格式）
+                        instrument: formatTime(row['仪表'] || row['instrument'] || '00:00'),
+                        // 12. 机长转场
+                        captainCrossCountry: formatTime(row['机长转场'] || row['captainCrossCountry'] || '00:00'),
+                        // 13. 副驾驶转场
+                        copilotCrossCountry: formatTime(row['副驾驶转场'] || row['copilotCrossCountry'] || '00:00'),
+                        // 14. 夜航（时间格式）
+                        nightFlight: formatTime(row['夜航'] || row['nightFlight'] || '00:00'),
+                        // 15. 飞行种类
+                        flightType: row['飞行种类'] || row['flightType'] || '其他',
+                        // 16. 着陆次数(昼间)
+                        landingsDay: parseInt(row['着陆次数(昼间)'] || row['着陆次数(昼)'] || row['landingsDay'] || 0),
+                        // 17. 着陆次数(夜间)
+                        landingsNight: parseInt(row['着陆次数(夜间)'] || row['着陆次数(夜)'] || row['landingsNight'] || 0),
+                        // 18. 机组成员
+                        crewMembers: row['机组成员'] || row['crewMembers'] || '',
+                        // 19. 救助人数
+                        rescued: parseInt(row['救助人数'] || row['rescued'] || 0),
+                        // 20. SPIC
+                        spic: formatTime(row['SPIC'] || row['spic'] || '00:00'),
+                        // 21. 备注
+                        remarks: row['备注'] || row['remarks'] || ''
+                    };
+                    
+                    // 计算机长时间和副驾驶时间（用于内部存储）
+                    record.captainTime = record.captain && record.totalTime ? record.totalTime : '00:00';
+                    record.copilotTime = record.copilot && record.totalTime ? record.totalTime : '00:00';
+                    
+                    // 智能联动处理
+                    if (record.captain && record.totalTime) {
+                        record.captainTime = record.totalTime;
+                        if (record.flightType === '转场' || record.flightType === '海上训练' || record.flightType === '救助') {
+                            record.captainCrossCountry = record.totalTime;
+                        }
+                    }
+                    
+                    if (record.copilot && record.totalTime) {
+                        record.copilotTime = record.totalTime;
+                        // 如果SPIC为空或00:00，且有副驾驶，则SPIC等于总时间
+                        if (!record.spic || record.spic === '00:00') {
+                            record.spic = record.totalTime;
+                        }
+                        if (record.flightType === '转场' || record.flightType === '海上训练' || record.flightType === '救助') {
+                            record.copilotCrossCountry = record.totalTime;
+                        }
+                    }
+                    
+                    existingRecords.push(record);
+                    importedCount++;
+                } catch (error) {
+                    errorCount++;
+                    console.error(`第 ${index + 1} 行导入失败:`, error);
+                }
+            });
+            
+            localStorage.setItem('flightRecords', JSON.stringify(existingRecords));
+            
+            if (errorCount > 0) {
+                showSuccess(`成功导入 ${importedCount} 条记录，${errorCount} 条失败`);
+            } else {
+                showSuccess(`成功导入 ${importedCount} 条记录！`);
+            }
+            
+            // 清空预览
+            document.getElementById('preview').style.display = 'none';
+            parsedData = [];
+        }
+        
+        function formatDate(date) {
+            if (!date) return new Date().toISOString().split('T')[0];
+            
+            // 如果已经是Date对象
+            if (date instanceof Date) {
+                // 检查是否是有效日期
+                if (isNaN(date.getTime())) {
+                    return new Date().toISOString().split('T')[0];
+                }
+                return date.toISOString().split('T')[0];
+            }
+            
+            // 如果是数字（Excel日期序列号）
+            if (typeof date === 'number') {
+                // Excel日期从1900-01-01开始，但Excel错误地认为1900是闰年
+                const excelEpoch = new Date(1899, 11, 30); // 1900-01-00的前一天
+                const resultDate = new Date(excelEpoch.getTime() + date * 24 * 60 * 60 * 1000);
+                return resultDate.toISOString().split('T')[0];
+            }
+            
+            // 如果是字符串
+            if (typeof date === 'string') {
+                // 处理中文日期格式：2024年1月1日
+                if (date.includes('年') && date.includes('月') && date.includes('日')) {
+                    const match = date.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+                    if (match) {
+                        const year = match[1];
+                        const month = String(match[2]).padStart(2, '0');
+                        const day = String(match[3]).padStart(2, '0');
+                        return `${year}-${month}-${day}`;
+                    }
+                }
+                
+                // 处理斜杠分隔的日期：2024/1/1 或 1/1/2024
+                if (date.includes('/')) {
+                    const parts = date.split('/');
+                    if (parts.length === 3) {
+                        if (parts[0].length === 4) {
+                            // YYYY/MM/DD
+                            return `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`;
+                        } else {
+                            // MM/DD/YYYY
+                            return `${parts[2]}-${String(parts[0]).padStart(2, '0')}-${String(parts[1]).padStart(2, '0')}`;
+                        }
+                    }
+                }
+                
+                // 处理横线分隔的日期：2024-1-1 或 2024-01-01
+                if (date.includes('-')) {
+                    const parts = date.split('-');
+                    if (parts.length === 3) {
+                        if (parts[0].length === 4) {
+                            // YYYY-MM-DD
+                            return `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`;
+                        } else {
+                            // MM-DD-YYYY
+                            return `${parts[2]}-${String(parts[0]).padStart(2, '0')}-${String(parts[1]).padStart(2, '0')}`;
+                        }
+                    }
+                }
+                
+                // 尝试直接解析
+                const parsedDate = new Date(date);
+                if (!isNaN(parsedDate.getTime())) {
+                    return parsedDate.toISOString().split('T')[0];
+                }
+            }
+            
+            return new Date().toISOString().split('T')[0];
+        }
+        
+        function formatTime(time) {
+            if (!time) return '00:00';
+            if (typeof time === 'number') {
+                // 如果是数字，可能是分钟数
+                const h = Math.floor(time / 60);
+                const m = time % 60;
+                return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            }
+            if (typeof time === 'string') {
+                // 处理时间字符串
+                if (time.includes(':')) {
+                    return time;
+                }
+            }
+            return '00:00';
+        }
+        
+        function parseBoolean(value) {
+            if (!value) return false;
+            if (typeof value === 'boolean') return value;
+            if (typeof value === 'string') {
+                return value.toLowerCase() === '是' || value.toLowerCase() === 'yes' || value === '1';
+            }
+            return false;
+        }
+        
+        function showSuccess(message) {
+            const msg = document.getElementById('successMessage');
+            msg.textContent = message;
+            msg.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        function showError(message) {
+            const msg = document.getElementById('errorMessage');
+            msg.textContent = message;
+            msg.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+        
+        function hideMessages() {
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        // 下载导入模板
+        function downloadTemplate() {
+            const headers = [
+                '日期',
+                '航空器型号',
+                '航空器登记号',
+                '起飞站',
+                '降落站',
+                '开车时刻',
+                '关车时刻',
+                '总时间',
+                '机长',
+                '副驾驶',
+                '仪表',
+                '机长转场',
+                '副驾驶转场',
+                '夜航',
+                '飞行种类',
+                '着陆次数(昼间)',
+                '着陆次数(夜间)',
+                '机组成员',
+                '救助人数',
+                'SPIC',
+                '备注'
+            ];
+            
+            // 创建示例数据
+            const exampleData = [
+                headers,
+                [
+                    '2024-01-15',
+                    'S76C+',
+                    'B-XXXX',
+                    '北京',
+                    '上海',
+                    '08:00',
+                    '10:30',
+                    '02:30',
+                    '张三',
+                    '李四',
+                    '00:30',
+                    '02:30',
+                    '02:30',
+                    '01:00',
+                    '训练',
+                    '2',
+                    '0',
+                    '王五,赵六',
+                    '0',
+                    '02:30',
+                    '正常训练'
+                ]
+            ];
+            
+            // 创建工作簿
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(exampleData);
+            
+            // 设置列宽
+            const colWidths = [
+                { wch: 12 }, // 日期
+                { wch: 12 }, // 航空器型号
+                { wch: 15 }, // 航空器登记号
+                { wch: 10 }, // 起飞站
+                { wch: 10 }, // 降落站
+                { wch: 12 }, // 开车时刻
+                { wch: 12 }, // 关车时刻
+                { wch: 10 }, // 总时间
+                { wch: 10 }, // 机长
+                { wch: 10 }, // 副驾驶
+                { wch: 10 }, // 仪表
+                { wch: 12 }, // 机长转场
+                { wch: 15 }, // 副驾驶转场
+                { wch: 10 }, // 夜航
+                { wch: 12 }, // 飞行种类
+                { wch: 15 }, // 着陆次数(昼间)
+                { wch: 15 }, // 着陆次数(夜间)
+                { wch: 15 }, // 机组成员
+                { wch: 12 }, // 救助人数
+                { wch: 10 }, // SPIC
+                { wch: 20 }  // 备注
+            ];
+            ws['!cols'] = colWidths;
+            
+            // 设置第一行为粗体
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let col = range.s.c; col <= range.e.c; col++) {
+                const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+                if (!ws[cellAddress]) continue;
+                ws[cellAddress].s = {
+                    font: { bold: true },
+                    alignment: { horizontal: 'center', vertical: 'center' },
+                    fill: { fgColor: { rgb: 'E0E0E0' } }
+                };
+            }
+            
+            // 将工作表添加到工作簿
+            XLSX.utils.book_append_sheet(wb, ws, '飞行记录');
+            
+            // 生成文件名（包含当前日期）
+            const today = new Date();
+            const dateStr = today.getFullYear() + 
+                          String(today.getMonth() + 1).padStart(2, '0') + 
+                          String(today.getDate()).padStart(2, '0');
+            const fileName = `飞行记录导入模板_${dateStr}.xlsx`;
+            
+            // 下载文件
+            XLSX.writeFile(wb, fileName);
+        }
+    </script>
+</body>
+</html>

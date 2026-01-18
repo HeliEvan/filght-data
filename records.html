@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>查看飞行记录 - 飞行经历录入系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+            text-orientation: mixed;
+        }
+        
+        * {
+            writing-mode: horizontal-tb;
+            direction: ltr;
+            text-orientation: mixed;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 2em;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+        }
+        
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9em;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+        }
+        
+        .controls input, .controls select {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+        }
+        
+        .controls input:focus, .controls select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #f5576c;
+            color: white;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+            text-orientation: mixed;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+            text-orientation: mixed;
+            white-space: nowrap;
+        }
+        
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e0e0e0;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+            text-orientation: mixed;
+            white-space: nowrap;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+        }
+        
+        .badge-yes {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .badge-no {
+            background: #e0e0e0;
+            color: #666;
+        }
+        
+        .no-records {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+        }
+        
+        .no-records-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+        }
+        
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 0.85em;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+        }
+        
+        .btn {
+            writing-mode: horizontal-tb;
+            direction: ltr;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <a href="index.html" class="back-link">← 返回首页</a>
+                <h1>📋 查看飞行记录</h1>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <select id="nameFilter">
+                <option value="">所有人员</option>
+            </select>
+            <input type="date" id="dateFrom" placeholder="开始日期">
+            <input type="date" id="dateTo" placeholder="结束日期">
+            <select id="flightTypeFilter">
+                <option value="">所有飞行种类</option>
+                <option value="训练">训练</option>
+                <option value="转场">转场</option>
+                <option value="海上训练">海上训练</option>
+                <option value="救助">救助</option>
+                <option value="其他">其他</option>
+            </select>
+            <button class="btn btn-primary" onclick="filterRecords()">筛选</button>
+            <button class="btn btn-primary" onclick="resetFilter()">重置</button>
+        </div>
+        
+        <div class="table-container">
+            <table id="recordsTable">
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>航空器型号</th>
+                        <th>航空器登记号</th>
+                        <th>起飞站</th>
+                        <th>降落站</th>
+                        <th>开车时刻</th>
+                        <th>关车时刻</th>
+                        <th>总时间</th>
+                        <th>机长时间</th>
+                        <th>副驾驶时间</th>
+                        <th>SPIC</th>
+                        <th>机长转场</th>
+                        <th>副驾驶转场</th>
+                        <th>带飞</th>
+                        <th>带飞转场</th>
+                        <th>仪表</th>
+                        <th>夜航</th>
+                        <th>飞行种类</th>
+                        <th>着陆次数(昼间)</th>
+                        <th>着陆次数(夜间)</th>
+                        <th>机长</th>
+                        <th>副驾驶</th>
+                        <th>救助人数</th>
+                        <th>备注</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="recordsBody">
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="noRecords" class="no-records" style="display: none;">
+            <div class="no-records-icon">✈️</div>
+            <p>暂无飞行记录</p>
+        </div>
+    </div>
+    
+    <script>
+        let allRecords = [];
+        
+        function loadRecords() {
+            allRecords = JSON.parse(localStorage.getItem('flightRecords') || '[]');
+            // 按日期倒序排列
+            allRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+            loadPersonList();
+            displayRecords(allRecords);
+        }
+        
+        function displayRecords(records) {
+            const tbody = document.getElementById('recordsBody');
+            const noRecords = document.getElementById('noRecords');
+            
+            if (records.length === 0) {
+                tbody.innerHTML = '';
+                noRecords.style.display = 'block';
+                return;
+            }
+            
+            noRecords.style.display = 'none';
+            tbody.innerHTML = records.map(record => `
+                <tr>
+                    <td>${record.date}</td>
+                    <td>${record.aircraftType}</td>
+                    <td>${record.aircraftReg}</td>
+                    <td>${record.departure}</td>
+                    <td>${record.arrival}</td>
+                    <td>${record.engineStart || '-'}</td>
+                    <td>${record.engineStop || '-'}</td>
+                    <td><strong>${record.totalTime}</strong></td>
+                    <td>${record.captainTime || '00:00'}</td>
+                    <td>${record.copilotTime || '00:00'}</td>
+                    <td>${record.spic || '00:00'}</td>
+                    <td>${record.captainCrossCountry || '00:00'}</td>
+                    <td>${record.copilotCrossCountry || '00:00'}</td>
+                    <td>${record.instructor || '00:00'}</td>
+                    <td>${record.instructorCrossCountry || '00:00'}</td>
+                    <td>${record.instrument && record.instrument !== '00:00' ? record.instrument : '-'}</td>
+                    <td>${record.nightFlight && record.nightFlight !== '00:00' ? record.nightFlight : '-'}</td>
+                    <td>${record.flightType}</td>
+                    <td>${record.landingsDay || 0}</td>
+                    <td>${record.landingsNight || 0}</td>
+                    <td>${record.captain || '-'}</td>
+                    <td>${record.copilot || '-'}</td>
+                    <td>${record.rescued || 0}</td>
+                    <td>${record.remarks || '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary btn-small" onclick="editRecord(${record.id})" style="background: #4facfe;">修改</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteRecord(${record.id})">删除</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function loadPersonList() {
+            const personSet = new Set();
+            allRecords.forEach(record => {
+                if (record.captain) personSet.add(record.captain);
+                if (record.copilot) personSet.add(record.copilot);
+            });
+            
+            const nameSelect = document.getElementById('nameFilter');
+            const currentValue = nameSelect.value;
+            
+            nameSelect.innerHTML = '<option value="">所有人员</option>';
+            Array.from(personSet).sort().forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                nameSelect.appendChild(option);
+            });
+            
+            if (currentValue) {
+                nameSelect.value = currentValue;
+            }
+        }
+        
+        function filterRecords() {
+            const personName = document.getElementById('nameFilter').value;
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            const flightType = document.getElementById('flightTypeFilter').value;
+            
+            let filtered = allRecords.filter(record => {
+                const matchName = !personName || 
+                    record.captain === personName || 
+                    record.copilot === personName;
+                
+                const matchDate = (!dateFrom || record.date >= dateFrom) && 
+                                 (!dateTo || record.date <= dateTo);
+                
+                const matchType = !flightType || record.flightType === flightType;
+                
+                return matchName && matchDate && matchType;
+            });
+            
+            displayRecords(filtered);
+        }
+        
+        function resetFilter() {
+            document.getElementById('nameFilter').value = '';
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            document.getElementById('flightTypeFilter').value = '';
+            displayRecords(allRecords);
+        }
+        
+        function deleteRecord(id) {
+            if (confirm('确定要删除这条记录吗？')) {
+                allRecords = allRecords.filter(r => r.id !== id);
+                localStorage.setItem('flightRecords', JSON.stringify(allRecords));
+                loadRecords();
+            }
+        }
+        
+        function editRecord(id) {
+            // 保存要编辑的记录ID到sessionStorage
+            sessionStorage.setItem('editRecordId', id);
+            // 跳转到录入页面
+            window.location.href = 'input.html';
+        }
+        
+        loadRecords();
+    </script>
+</body>
+</html>

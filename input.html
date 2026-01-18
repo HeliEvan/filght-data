@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>录入飞行记录 - 飞行经历录入系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9em;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+            align-items: start;
+        }
+        
+        @media (max-width: 1200px) {
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            min-height: 80px;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        label {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+            height: 24px;
+            display: flex;
+            align-items: center;
+        }
+        
+        input, select, textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            width: 100%;
+            box-sizing: border-box;
+            height: 44px;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            height: auto;
+        }
+        
+        .time-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .time-group label {
+            height: auto;
+            margin-bottom: 5px;
+        }
+        
+        .time-group input {
+            height: 44px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .auto-calc {
+            background: #e8f5e9;
+            padding: 8px 10px;
+            border-radius: 8px;
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #2e7d32;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .info-tip {
+            background: #fff3cd;
+            padding: 8px 10px;
+            border-radius: 8px;
+            margin-top: 5px;
+            font-size: 0.85em;
+            color: #856404;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+        }
+        
+        input[readonly] {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-link">← 返回首页</a>
+            <h1>📝 录入飞行记录</h1>
+        </div>
+        
+        <form id="flightForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="date">日期 *</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="aircraftType">航空器型号 *</label>
+                    <select id="aircraftType" name="aircraftType" required>
+                        <option value="">请选择</option>
+                        <option value="S76C+">S76C+</option>
+                        <option value="S76C++">S76C++</option>
+                        <option value="S76D">S76D</option>
+                        <option value="G2">G2</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="aircraftReg">航空器登记号 *</label>
+                    <input type="text" id="aircraftReg" name="aircraftReg" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="departure">起飞站 *</label>
+                    <input type="text" id="departure" name="departure" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="arrival">降落站 *</label>
+                    <input type="text" id="arrival" name="arrival" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>时间</label>
+                    <div class="time-group">
+                        <div>
+                            <label for="engineStart" style="font-size: 0.85em; color: #666;">开车时刻</label>
+                            <input type="text" id="engineStart" name="engineStart" placeholder="HH:MM" maxlength="5" pattern="[0-9]{2}:[0-9]{2}">
+                        </div>
+                        <div>
+                            <label for="engineStop" style="font-size: 0.85em; color: #666;">关车时刻</label>
+                            <input type="text" id="engineStop" name="engineStop" placeholder="HH:MM" maxlength="5" pattern="[0-9]{2}:[0-9]{2}">
+                        </div>
+                    </div>
+                    <div class="auto-calc" id="timeCalc" style="display: none;">
+                        自动计算总时间: <span id="calcTime">00:00</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="totalTime">总时间 (HH:MM) *</label>
+                    <input type="text" id="totalTime" name="totalTime" pattern="[0-9]{2}:[0-9]{2}" placeholder="00:00" required readonly style="background-color: #f5f5f5;">
+                    <div class="info-tip">根据开车/关车时刻自动计算</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="captain">机长</label>
+                    <input type="text" id="captain" name="captain" placeholder="输入机长姓名">
+                </div>
+                
+                <div class="form-group">
+                    <label for="captainTime">机长时间 (HH:MM)</label>
+                    <input type="text" id="captainTime" name="captainTime" pattern="[0-9]{2}:[0-9]{2}" placeholder="00:00">
+                </div>
+                
+                <div class="form-group">
+                    <label for="captainCrossCountry">机长转场 (HH:MM)</label>
+                    <input type="text" id="captainCrossCountry" name="captainCrossCountry" pattern="[0-9]{2}:[0-9]{2}" placeholder="00:00">
+                </div>
+                
+                <div class="form-group">
+                    <label for="copilot">副驾驶</label>
+                    <input type="text" id="copilot" name="copilot" placeholder="输入副驾驶姓名">
+                </div>
+                
+                <div class="form-group">
+                    <label for="copilotTime">副驾驶时间 (HH:MM)</label>
+                    <input type="text" id="copilotTime" name="copilotTime" pattern="[0-9]{2}:[0-9]{2}" placeholder="00:00">
+                </div>
+                
+                <div class="form-group">
+                    <label for="copilotCrossCountry">副驾驶转场 (HH:MM)</label>
+                    <input type="text" id="copilotCrossCountry" name="copilotCrossCountry" pattern="[0-9]{2}:[0-9]{2}" placeholder="00:00">
+                </div>
+                
+                <div class="form-group">
+                    <label for="spic">SPIC (HH:MM)</label>
+                    <input type="text" id="spic" name="spic" pattern="[0-9]{2}:[0-9]{2}" placeholder="00:00">
+                </div>
+                
+                <div class="form-group">
+                    <label for="instructor">带飞 (HH:MM)</label>
+                    <input type="text" id="instructor" name="instructor" pattern="[0-9]{2}:[0-9]{2}" placeholder="00:00">
+                </div>
+                
+                <div class="form-group">
+                    <label for="instructorCrossCountry">带飞转场 (HH:MM)</label>
+                    <input type="text" id="instructorCrossCountry" name="instructorCrossCountry" pattern="[0-9]{2}:[0-9]{2}" placeholder="00:00">
+                </div>
+                
+                <div class="form-group">
+                    <label for="flightType">飞行种类 *</label>
+                    <select id="flightType" name="flightType" required>
+                        <option value="">请选择</option>
+                        <option value="训练">训练</option>
+                        <option value="转场">转场</option>
+                        <option value="海上训练">海上训练</option>
+                        <option value="救助">救助</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>着陆次数</label>
+                    <div class="time-group">
+                        <div>
+                            <label for="landingsDay" style="font-size: 0.85em; color: #666;">昼间</label>
+                            <input type="number" id="landingsDay" name="landingsDay" min="0" value="0">
+                        </div>
+                        <div>
+                            <label for="landingsNight" style="font-size: 0.85em; color: #666;">夜间</label>
+                            <input type="number" id="landingsNight" name="landingsNight" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="crewMembers">机组成员</label>
+                    <input type="text" id="crewMembers" name="crewMembers" placeholder="多个成员用逗号分隔">
+                </div>
+                
+                <div class="form-group">
+                    <label for="rescued">救助人数</label>
+                    <input type="number" id="rescued" name="rescued" min="0" value="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="instrument">仪表时间 (HH:MM)</label>
+                    <input type="text" id="instrument" name="instrument" pattern="[0-9]{2}:[0-9]{2}" placeholder="00:00">
+                </div>
+                
+                <div class="form-group">
+                    <label for="nightFlight">夜航时间 (HH:MM)</label>
+                    <input type="text" id="nightFlight" name="nightFlight" pattern="[0-9]{2}:[0-9]{2}" placeholder="00:00">
+                </div>
+                
+                <div class="form-group full-width">
+                    <label for="remarks">备注</label>
+                    <textarea id="remarks" name="remarks" placeholder="其他需要记录的信息"></textarea>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit" class="btn-primary">保存记录</button>
+                <button type="reset" class="btn-secondary">重置表单</button>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        // 时间计算函数
+        function calculateTime() {
+            const start = document.getElementById('engineStart').value;
+            const stop = document.getElementById('engineStop').value;
+            
+            if (start && stop && /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/.test(start) && /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/.test(stop)) {
+                const [startH, startM] = start.split(':').map(Number);
+                const [stopH, stopM] = stop.split(':').map(Number);
+                
+                let startMinutes = startH * 60 + startM;
+                let stopMinutes = stopH * 60 + stopM;
+                
+                // 处理跨天情况
+                if (stopMinutes < startMinutes) {
+                    stopMinutes += 24 * 60; // 加一天
+                }
+                
+                const diffMinutes = stopMinutes - startMinutes;
+                const hours = Math.floor(diffMinutes / 60);
+                const minutes = diffMinutes % 60;
+                
+                const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                document.getElementById('calcTime').textContent = timeStr;
+                document.getElementById('timeCalc').style.display = 'block';
+                
+                // 自动填充总时间（始终更新）
+                document.getElementById('totalTime').value = timeStr;
+                updateLinkedTimes();
+            } else {
+                document.getElementById('timeCalc').style.display = 'none';
+            }
+        }
+        
+        // 智能联动更新
+        function updateLinkedTimes() {
+            const totalTime = document.getElementById('totalTime').value;
+            const captain = document.getElementById('captain').value.trim();
+            const copilot = document.getElementById('copilot').value.trim();
+            const flightType = document.getElementById('flightType').value;
+            const captainTime = document.getElementById('captainTime').value;
+            const copilotTime = document.getElementById('copilotTime').value;
+            
+            // 规则1: 录入机长姓名 → 机长时间 = 总时间
+            if (captain && totalTime) {
+                document.getElementById('captainTime').value = totalTime;
+                
+                // 规则3: 选择「转场」/「海上训练」/「救助」→ 机长转场 = 机长时间
+                if (flightType === '转场' || flightType === '海上训练' || flightType === '救助') {
+                    document.getElementById('captainCrossCountry').value = totalTime;
+                } else if (!flightType || flightType === '训练' || flightType === '其他') {
+                    // 如果不是转场类型，清空转场时间
+                    if (!document.getElementById('captainCrossCountry').value) {
+                        document.getElementById('captainCrossCountry').value = '00:00';
+                    }
+                }
+            } else if (!captain) {
+                // 如果清空机长姓名，清空机长时间
+                document.getElementById('captainTime').value = '';
+                document.getElementById('captainCrossCountry').value = '';
+            }
+            
+            // 规则2: 录入副驾驶姓名 → 副驾驶时间 = 总时间 = SPIC时间
+            if (copilot && totalTime) {
+                document.getElementById('copilotTime').value = totalTime;
+                document.getElementById('spic').value = totalTime;
+                
+                // 规则3: 选择「转场」/「海上训练」/「救助」→ 副驾驶转场 = 副驾驶时间
+                if (flightType === '转场' || flightType === '海上训练' || flightType === '救助') {
+                    document.getElementById('copilotCrossCountry').value = totalTime;
+                } else if (!flightType || flightType === '训练' || flightType === '其他') {
+                    // 如果不是转场类型，清空转场时间
+                    if (!document.getElementById('copilotCrossCountry').value) {
+                        document.getElementById('copilotCrossCountry').value = '00:00';
+                    }
+                }
+            } else if (!copilot) {
+                // 如果清空副驾驶姓名，清空副驾驶时间和SPIC
+                document.getElementById('copilotTime').value = '';
+                document.getElementById('copilotCrossCountry').value = '';
+                document.getElementById('spic').value = '';
+            }
+        }
+        
+        // 时间输入框格式化（不自动切换焦点）
+        function setupTimeInputFormat() {
+            const timeInputs = ['engineStart', 'engineStop', 'instrument', 'nightFlight'];
+            
+            timeInputs.forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (!input) return;
+                
+                // 只允许输入数字和冒号
+                input.addEventListener('keypress', function(e) {
+                    const char = String.fromCharCode(e.which);
+                    if (!/[0-9]/.test(char) && char !== ':') {
+                        e.preventDefault();
+                    }
+                });
+                
+                // 处理输入，自动添加冒号
+                input.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/[^0-9:]/g, ''); // 只保留数字和冒号
+                    
+                    // 如果输入了2位数字且没有冒号，自动添加冒号
+                    if (value.length === 2 && !value.includes(':')) {
+                        value = value + ':';
+                        e.target.value = value;
+                        // 移动光标到分钟位置
+                        setTimeout(() => {
+                            e.target.setSelectionRange(3, 5);
+                        }, 0);
+                    }
+                    // 如果已经有冒号，限制总长度为5（HH:MM）
+                    else if (value.includes(':')) {
+                        const parts = value.split(':');
+                        if (parts[0].length > 2) {
+                            parts[0] = parts[0].substring(0, 2);
+                        }
+                        if (parts[1] && parts[1].length > 2) {
+                            parts[1] = parts[1].substring(0, 2);
+                        }
+                        value = parts.join(':');
+                        e.target.value = value;
+                    }
+                    // 限制小时部分最多2位
+                    else if (value.length > 2) {
+                        value = value.substring(0, 2) + ':';
+                        e.target.value = value;
+                        setTimeout(() => {
+                            e.target.setSelectionRange(3, 5);
+                        }, 0);
+                    }
+                    
+                    // 如果是开车或关车时刻，自动计算总时间
+                    if (inputId === 'engineStart' || inputId === 'engineStop') {
+                        calculateTime();
+                    }
+                });
+                
+                // 处理粘贴
+                input.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const pasted = (e.clipboardData || window.clipboardData).getData('text');
+                    const cleaned = pasted.replace(/[^0-9:]/g, '');
+                    if (cleaned.length >= 2) {
+                        let formatted = cleaned.substring(0, 2);
+                        if (cleaned.length > 2) {
+                            formatted += ':' + cleaned.substring(2, 4);
+                        }
+                        e.target.value = formatted;
+                    }
+                    if (inputId === 'engineStart' || inputId === 'engineStop') {
+                        calculateTime();
+                    }
+                });
+                
+                // 验证格式
+                input.addEventListener('blur', function(e) {
+                    const value = e.target.value;
+                    if (value && !/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/.test(value)) {
+                        // 如果格式不正确，尝试修复
+                        const parts = value.split(':');
+                        if (parts.length === 2) {
+                            const h = parts[0].padStart(2, '0').substring(0, 2);
+                            const m = parts[1].padStart(2, '0').substring(0, 2);
+                            const hour = Math.min(23, parseInt(h) || 0);
+                            const minute = Math.min(59, parseInt(m) || 0);
+                            e.target.value = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                        }
+                    }
+                    // 如果是开车或关车时刻，计算总时间
+                    if (inputId === 'engineStart' || inputId === 'engineStop') {
+                        calculateTime();
+                    }
+                });
+            });
+        }
+        
+        // 加载编辑记录
+        function loadEditRecord() {
+            const editRecordId = sessionStorage.getItem('editRecordId');
+            if (!editRecordId) return;
+            
+            const records = JSON.parse(localStorage.getItem('flightRecords') || '[]');
+            const record = records.find(r => r.id == editRecordId);
+            if (!record) {
+                sessionStorage.removeItem('editRecordId');
+                return;
+            }
+            
+            // 填充表单
+            document.getElementById('date').value = record.date || '';
+            document.getElementById('aircraftType').value = record.aircraftType || '';
+            document.getElementById('aircraftReg').value = record.aircraftReg || '';
+            document.getElementById('departure').value = record.departure || '';
+            document.getElementById('arrival').value = record.arrival || '';
+            document.getElementById('engineStart').value = record.engineStart || '';
+            document.getElementById('engineStop').value = record.engineStop || '';
+            document.getElementById('totalTime').value = record.totalTime || '';
+            document.getElementById('captain').value = record.captain || '';
+            document.getElementById('captainTime').value = record.captainTime || '';
+            document.getElementById('captainCrossCountry').value = record.captainCrossCountry || '';
+            document.getElementById('copilot').value = record.copilot || '';
+            document.getElementById('copilotTime').value = record.copilotTime || '';
+            document.getElementById('copilotCrossCountry').value = record.copilotCrossCountry || '';
+            document.getElementById('spic').value = record.spic || '';
+            document.getElementById('instructor').value = record.instructor || '';
+            document.getElementById('instructorCrossCountry').value = record.instructorCrossCountry || '';
+            document.getElementById('instrument').value = record.instrument || '';
+            document.getElementById('nightFlight').value = record.nightFlight || '';
+            document.getElementById('flightType').value = record.flightType || '';
+            document.getElementById('landingsDay').value = record.landingsDay || 0;
+            document.getElementById('landingsNight').value = record.landingsNight || 0;
+            document.getElementById('crewMembers').value = record.crewMembers || '';
+            document.getElementById('rescued').value = record.rescued || 0;
+            document.getElementById('remarks').value = record.remarks || '';
+            
+            // 更新标题
+            const header = document.querySelector('.header h1');
+            if (header) {
+                header.textContent = '✏️ 修改飞行记录';
+            }
+        }
+        
+        // 事件监听
+        setupTimeInputFormat();
+        document.getElementById('engineStart').addEventListener('input', calculateTime);
+        document.getElementById('engineStop').addEventListener('input', calculateTime);
+        document.getElementById('totalTime').addEventListener('input', updateLinkedTimes);
+        document.getElementById('captain').addEventListener('input', updateLinkedTimes);
+        document.getElementById('copilot').addEventListener('input', updateLinkedTimes);
+        document.getElementById('flightType').addEventListener('change', updateLinkedTimes);
+        
+        // 加载编辑记录
+        loadEditRecord();
+        
+        // 表单提交
+        document.getElementById('flightForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const editRecordId = sessionStorage.getItem('editRecordId');
+            const formData = new FormData(e.target);
+            const record = {
+                id: editRecordId ? parseInt(editRecordId) : Date.now(),
+                date: formData.get('date'),
+                aircraftType: formData.get('aircraftType'),
+                aircraftReg: formData.get('aircraftReg'),
+                departure: formData.get('departure'),
+                arrival: formData.get('arrival'),
+                engineStart: formData.get('engineStart'),
+                engineStop: formData.get('engineStop'),
+                totalTime: formData.get('totalTime'),
+                captain: formData.get('captain'),
+                captainTime: formData.get('captainTime') || '00:00',
+                captainCrossCountry: formData.get('captainCrossCountry') || '00:00',
+                copilot: formData.get('copilot'),
+                copilotTime: formData.get('copilotTime') || '00:00',
+                copilotCrossCountry: formData.get('copilotCrossCountry') || '00:00',
+                spic: formData.get('spic') || '00:00',
+                instructor: formData.get('instructor') || '00:00',
+                instructorCrossCountry: formData.get('instructorCrossCountry') || '00:00',
+                instrument: formData.get('instrument') || '00:00',
+                nightFlight: formData.get('nightFlight') || '00:00',
+                flightType: formData.get('flightType'),
+                landingsDay: parseInt(formData.get('landingsDay')) || 0,
+                landingsNight: parseInt(formData.get('landingsNight')) || 0,
+                crewMembers: formData.get('crewMembers'),
+                rescued: parseInt(formData.get('rescued')) || 0,
+                remarks: formData.get('remarks')
+            };
+            
+            // 保存到localStorage
+            const records = JSON.parse(localStorage.getItem('flightRecords') || '[]');
+            if (editRecordId) {
+                // 编辑模式：更新记录
+                const index = records.findIndex(r => r.id == editRecordId);
+                if (index !== -1) {
+                    records[index] = record;
+                }
+                sessionStorage.removeItem('editRecordId');
+                alert('飞行记录修改成功！');
+                // 跳转回记录页面
+                window.location.href = 'records.html';
+            } else {
+                // 新增模式：添加记录
+                records.push(record);
+                alert('飞行记录保存成功！');
+                e.target.reset();
+            }
+            localStorage.setItem('flightRecords', JSON.stringify(records));
+        });
+    </script>
+</body>
+</html>

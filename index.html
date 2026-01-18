@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飞行经历录入系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 50px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+        
+        .menu-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 150px;
+        }
+        
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .menu-card:nth-child(2) {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .menu-card:nth-child(3) {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .menu-card:nth-child(4) {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .menu-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .menu-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .menu-desc {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .stats {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✈️ 飞行经历录入系统</h1>
+        <p class="subtitle">专业的飞行时间管理与统计系统</p>
+        
+        <div class="menu-grid">
+            <a href="input.html" class="menu-card">
+                <div class="menu-icon">📝</div>
+                <div class="menu-title">录入飞行记录</div>
+                <div class="menu-desc">新增飞行时间记录</div>
+            </a>
+            
+            <a href="records.html" class="menu-card">
+                <div class="menu-icon">📋</div>
+                <div class="menu-title">查看飞行记录</div>
+                <div class="menu-desc">浏览所有飞行记录</div>
+            </a>
+            
+            <a href="statistics.html" class="menu-card">
+                <div class="menu-icon">📊</div>
+                <div class="menu-title">统计查询</div>
+                <div class="menu-desc">按条件统计飞行时间</div>
+            </a>
+            
+            <a href="import.html" class="menu-card">
+                <div class="menu-icon">📥</div>
+                <div class="menu-title">导入数据</div>
+                <div class="menu-desc">批量导入历史数据</div>
+            </a>
+            
+            <a href="supplement.html" class="menu-card">
+                <div class="menu-icon">📝</div>
+                <div class="menu-title">数据补录</div>
+                <div class="menu-desc">补录历史飞行数据</div>
+            </a>
+        </div>
+        
+        <div class="stats" id="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="totalRecords">0</div>
+                <div class="stat-label">总记录数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalTime">00:00</div>
+                <div class="stat-label">总飞行时间</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="captainTime">00:00</div>
+                <div class="stat-label">机长时间</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="copilotTime">00:00</div>
+                <div class="stat-label">副驾驶时间</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="instrumentTime">00:00</div>
+                <div class="stat-label">仪表时间</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="nightTime">00:00</div>
+                <div class="stat-label">夜航时间</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 加载统计数据
+        function loadStats() {
+            const records = JSON.parse(localStorage.getItem('flightRecords') || '[]');
+            document.getElementById('totalRecords').textContent = records.length;
+            
+            let totalMinutes = 0;
+            let captainMinutes = 0;
+            let copilotMinutes = 0;
+            let instrumentMinutes = 0;
+            let nightMinutes = 0;
+            
+            records.forEach(record => {
+                if (record.totalTime) {
+                    const [h, m] = record.totalTime.split(':').map(Number);
+                    totalMinutes += h * 60 + m;
+                }
+                if (record.captainTime) {
+                    const [h, m] = record.captainTime.split(':').map(Number);
+                    captainMinutes += h * 60 + m;
+                }
+                if (record.copilotTime) {
+                    const [h, m] = record.copilotTime.split(':').map(Number);
+                    copilotMinutes += h * 60 + m;
+                }
+                if (record.instrument && record.instrument !== '00:00') {
+                    const [h, m] = record.instrument.split(':').map(Number);
+                    instrumentMinutes += h * 60 + m;
+                }
+                if (record.nightFlight && record.nightFlight !== '00:00') {
+                    const [h, m] = record.nightFlight.split(':').map(Number);
+                    nightMinutes += h * 60 + m;
+                }
+            });
+            
+            document.getElementById('totalTime').textContent = formatTime(totalMinutes);
+            document.getElementById('captainTime').textContent = formatTime(captainMinutes);
+            document.getElementById('copilotTime').textContent = formatTime(copilotMinutes);
+            document.getElementById('instrumentTime').textContent = formatTime(instrumentMinutes);
+            document.getElementById('nightTime').textContent = formatTime(nightMinutes);
+        }
+        
+        function formatTime(minutes) {
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        }
+        
+        loadStats();
+    </script>
+</body>
+</html>

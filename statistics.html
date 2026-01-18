@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>统计查询 - 飞行经历录入系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            writing-mode: horizontal-tb;
+            direction: ltr;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+        
+        .header {
+            margin-bottom: 30px;
+        }
+        
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9em;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 30px;
+        }
+        
+        .filter-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        
+        input, select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .tag-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .tag-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .tag-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 15px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .stat-card:nth-child(2) {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .stat-card:nth-child(3) {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .stat-card:nth-child(4) {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .stat-label {
+            font-size: 0.95em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .details-table {
+            margin-top: 30px;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-link">← 返回首页</a>
+            <h1>📊 统计查询</h1>
+        </div>
+        
+        <div class="filter-section">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>选择人员（可选）</label>
+                    <select id="personName">
+                        <option value="">-- 全部人员 --</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>选择机型（可选）</label>
+                    <select id="aircraftTypeFilter">
+                        <option value="">-- 全部机型 --</option>
+                        <option value="S76C+">S76C+</option>
+                        <option value="S76C++">S76C++</option>
+                        <option value="S76D">S76D</option>
+                        <option value="G2">G2</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>飞行种类（可选）</label>
+                    <select id="flightTypeFilter">
+                        <option value="">-- 全部种类 --</option>
+                        <option value="训练">训练</option>
+                        <option value="转场">转场</option>
+                        <option value="海上训练">海上训练</option>
+                        <option value="救助">救助</option>
+                        <option value="补录">补录</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>开始日期</label>
+                    <input type="date" id="dateFrom">
+                </div>
+                <div class="filter-group">
+                    <label>结束日期</label>
+                    <input type="date" id="dateTo">
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <label>统计标签（可多选）</label>
+                <div class="tag-filters">
+                    <div class="tag-checkbox">
+                        <input type="checkbox" id="tag-total" value="totalTime" checked>
+                        <label for="tag-total" style="margin: 0;">总时间</label>
+                    </div>
+                    <div class="tag-checkbox">
+                        <input type="checkbox" id="tag-captain" value="captainTime">
+                        <label for="tag-captain" style="margin: 0;">机长</label>
+                    </div>
+                    <div class="tag-checkbox">
+                        <input type="checkbox" id="tag-captainCC" value="captainCrossCountry">
+                        <label for="tag-captainCC" style="margin: 0;">机长转场</label>
+                    </div>
+                    <div class="tag-checkbox">
+                        <input type="checkbox" id="tag-copilot" value="copilotTime">
+                        <label for="tag-copilot" style="margin: 0;">副驾驶</label>
+                    </div>
+                    <div class="tag-checkbox">
+                        <input type="checkbox" id="tag-copilotCC" value="copilotCrossCountry">
+                        <label for="tag-copilotCC" style="margin: 0;">副驾驶转场</label>
+                    </div>
+                    <div class="tag-checkbox">
+                        <input type="checkbox" id="tag-spic" value="spic">
+                        <label for="tag-spic" style="margin: 0;">SPIC</label>
+                    </div>
+                    <div class="tag-checkbox">
+                        <input type="checkbox" id="tag-instrument" value="instrument">
+                        <label for="tag-instrument" style="margin: 0;">仪表</label>
+                    </div>
+                    <div class="tag-checkbox">
+                        <input type="checkbox" id="tag-night" value="nightFlight">
+                        <label for="tag-night" style="margin: 0;">夜航</label>
+                    </div>
+                    <div class="tag-checkbox">
+                        <input type="checkbox" id="tag-landingsDay" value="landingsDay">
+                        <label for="tag-landingsDay" style="margin: 0;">着陆次数(昼)</label>
+                    </div>
+                    <div class="tag-checkbox">
+                        <input type="checkbox" id="tag-landingsNight" value="landingsNight">
+                        <label for="tag-landingsNight" style="margin: 0;">着陆次数(夜)</label>
+                    </div>
+                    <div class="tag-checkbox">
+                        <input type="checkbox" id="tag-rescued" value="rescued">
+                        <label for="tag-rescued" style="margin: 0;">救助人数</label>
+                    </div>
+                    <div class="tag-checkbox">
+                        <input type="checkbox" id="tag-instructor" value="instructor">
+                        <label for="tag-instructor" style="margin: 0;">带飞</label>
+                    </div>
+                    <div class="tag-checkbox">
+                        <input type="checkbox" id="tag-instructorCC" value="instructorCrossCountry">
+                        <label for="tag-instructorCC" style="margin: 0;">带飞转场</label>
+                    </div>
+                    <div class="tag-checkbox">
+                        <input type="checkbox" id="tag-aircraftType" value="aircraftType">
+                        <label for="tag-aircraftType" style="margin: 0;">机型</label>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" onclick="calculateStats()">查询统计</button>
+        </div>
+        
+        <div id="statsResults" style="display: none;">
+            <div class="stats-grid" id="statsGrid">
+            </div>
+            
+            <div class="details-table">
+                <h3 style="margin: 30px 0 15px 0;">详细统计</h3>
+                <table id="detailsTable">
+                    <thead>
+                        <tr>
+                            <th>统计项</th>
+                            <th>数值</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailsBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 加载人员列表
+        function loadPersonList() {
+            const records = JSON.parse(localStorage.getItem('flightRecords') || '[]');
+            const personSet = new Set();
+            
+            records.forEach(record => {
+                if (record.captain) personSet.add(record.captain);
+                if (record.copilot) personSet.add(record.copilot);
+            });
+            
+            const personSelect = document.getElementById('personName');
+            const currentValue = personSelect.value;
+            
+            personSelect.innerHTML = '<option value="">-- 全部人员 --</option>';
+            Array.from(personSet).sort().forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                personSelect.appendChild(option);
+            });
+            
+            if (currentValue) {
+                personSelect.value = currentValue;
+            }
+        }
+        
+        function calculateStats() {
+            const personName = document.getElementById('personName').value;
+            const aircraftType = document.getElementById('aircraftTypeFilter').value;
+            const flightType = document.getElementById('flightTypeFilter').value;
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            
+            // 获取选中的标签
+            const selectedTags = [];
+            document.querySelectorAll('.tag-checkbox input[type="checkbox"]:checked').forEach(cb => {
+                selectedTags.push(cb.value);
+            });
+            
+            if (selectedTags.length === 0) {
+                alert('请至少选择一个统计标签');
+                return;
+            }
+            
+            // 加载记录
+            const records = JSON.parse(localStorage.getItem('flightRecords') || '[]');
+            
+            // 筛选日期、姓名、机型、飞行种类
+            let filteredRecords = records;
+            if (dateFrom || dateTo || personName || aircraftType || flightType) {
+                filteredRecords = records.filter(record => {
+                    const matchFrom = !dateFrom || record.date >= dateFrom;
+                    const matchTo = !dateTo || record.date <= dateTo;
+                    const matchName = !personName || record.captain === personName || record.copilot === personName;
+                    const matchAircraft = !aircraftType || record.aircraftType === aircraftType;
+                    const matchFlightType = !flightType || record.flightType === flightType;
+                    return matchFrom && matchTo && matchName && matchAircraft && matchFlightType;
+                });
+            }
+            
+            // 计算统计
+            const stats = {};
+            selectedTags.forEach(tag => {
+                stats[tag] = { total: 0, count: 0, aircraftTypes: new Set() };
+            });
+            
+            filteredRecords.forEach(record => {
+                const isCaptain = personName ? record.captain === personName : true;
+                const isCopilot = personName ? record.copilot === personName : true;
+                
+                selectedTags.forEach(tag => {
+                    if (tag === 'instrument' || tag === 'nightFlight') {
+                        // 如果是按姓名统计，需要判断该人员是否参与该次飞行
+                        if (personName && !isCaptain && !isCopilot) return;
+                        
+                        // 仪表和夜航现在是时间格式（HH:MM）
+                        const time = record[tag];
+                        if (time && time !== '00:00') {
+                            const [h, m] = time.split(':').map(Number);
+                            stats[tag].total += h * 60 + m;
+                            stats[tag].count++;
+                        }
+                    } else if (tag === 'landingsDay' || tag === 'landingsNight' || tag === 'rescued') {
+                        if (personName && !isCaptain && !isCopilot) return;
+                        
+                        stats[tag].total += parseInt(record[tag]) || 0;
+                        stats[tag].count++;
+                    } else if (tag === 'aircraftType') {
+                        if (personName && !isCaptain && !isCopilot) return;
+                        
+                        if (record.aircraftType) {
+                            stats[tag].aircraftTypes.add(record.aircraftType);
+                            stats[tag].count++;
+                        }
+                    } else {
+                        // 时间类型
+                        let time = null;
+                        
+                        // 按姓名统计时，需要根据角色选择对应的时间
+                        if (personName) {
+                            if (isCaptain) {
+                                if (tag === 'captainTime' || tag === 'totalTime') {
+                                    time = tag === 'captainTime' ? record.captainTime : record.totalTime;
+                                } else if (tag === 'captainCrossCountry') {
+                                    time = record.captainCrossCountry;
+                                }
+                            }
+                            if (isCopilot) {
+                                if (tag === 'copilotTime' || tag === 'totalTime' || tag === 'spic') {
+                                    time = tag === 'copilotTime' ? record.copilotTime : 
+                                           tag === 'spic' ? record.spic : record.totalTime;
+                                } else if (tag === 'copilotCrossCountry') {
+                                    time = record.copilotCrossCountry;
+                                }
+                            }
+                            
+                            // 带飞和带飞转场：带飞时间通常等于副驾驶时间，带飞转场等于副驾驶转场
+                            if (tag === 'instructor') {
+                                // 带飞时间 = 副驾驶时间
+                                time = isCopilot ? record.copilotTime : null;
+                            } else if (tag === 'instructorCrossCountry') {
+                                // 带飞转场 = 副驾驶转场
+                                time = isCopilot ? record.copilotCrossCountry : null;
+                            }
+                            
+                            // 如果是总时间，且该人员参与了飞行，使用总时间
+                            if (tag === 'totalTime' && (isCaptain || isCopilot)) {
+                                time = record.totalTime;
+                            }
+                        } else {
+                            // 全部统计，直接使用记录中的时间
+                            time = record[tag];
+                        }
+                        
+                        if (time && time !== '00:00') {
+                            const [h, m] = time.split(':').map(Number);
+                            stats[tag].total += h * 60 + m;
+                            stats[tag].count++;
+                        }
+                    }
+                });
+            });
+            
+            // 显示结果
+            displayStats(stats, selectedTags, personName);
+        }
+        
+        function formatTime(minutes) {
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        }
+        
+        function getTagLabel(tag) {
+            const labels = {
+                'totalTime': '总时间',
+                'captainTime': '机长时间',
+                'captainCrossCountry': '机长转场',
+                'copilotTime': '副驾驶时间',
+                'copilotCrossCountry': '副驾驶转场',
+                'spic': 'SPIC',
+                'instrument': '仪表',
+                'nightFlight': '夜航',
+                'landingsDay': '着陆次数(昼)',
+                'landingsNight': '着陆次数(夜)',
+                'rescued': '救助人数',
+                'instructor': '带飞',
+                'instructorCrossCountry': '带飞转场',
+                'aircraftType': '机型'
+            };
+            return labels[tag] || tag;
+        }
+        
+        function displayStats(stats, selectedTags, personName) {
+            const statsGrid = document.getElementById('statsGrid');
+            const detailsBody = document.getElementById('detailsBody');
+            
+            statsGrid.innerHTML = '';
+            detailsBody.innerHTML = '';
+            
+            // 如果有选择人员，显示标题
+            if (personName) {
+                const titleRow = document.createElement('tr');
+                titleRow.style.background = '#f8f9fa';
+                titleRow.innerHTML = `
+                    <td colspan="2" style="text-align: center; font-weight: 700; font-size: 1.1em; padding: 15px;">
+                        ${personName} 的统计结果
+                    </td>
+                `;
+                detailsBody.appendChild(titleRow);
+            }
+            
+            selectedTags.forEach(tag => {
+                const stat = stats[tag];
+                let value, unit;
+                
+                if (tag === 'instrument' || tag === 'nightFlight') {
+                    // 仪表和夜航显示时间
+                    value = formatTime(stat.total);
+                    unit = '';
+                } else if (tag === 'landingsDay' || tag === 'landingsNight' || tag === 'rescued') {
+                    value = stat.total;
+                    unit = tag === 'rescued' ? '人' : '次';
+                } else if (tag === 'aircraftType') {
+                    value = Array.from(stat.aircraftTypes).join('、') || '无';
+                    unit = '';
+                } else {
+                    value = formatTime(stat.total);
+                    unit = '';
+                }
+                
+                // 统计卡片
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <div class="stat-label">${getTagLabel(tag)}</div>
+                    <div class="stat-value">${value}${unit}</div>
+                `;
+                statsGrid.appendChild(card);
+                
+                // 详细表格
+                const row = document.createElement('tr');
+                let detailText = `<strong>${value}${unit}</strong>`;
+                if (tag === 'aircraftType') {
+                    detailText += ` (共 ${stat.count} 种机型)`;
+                } else if (tag !== 'instrument' && tag !== 'nightFlight' && !tag.includes('Time') && tag !== 'spic') {
+                    detailText += ` (记录数: ${stat.count})`;
+                }
+                
+                row.innerHTML = `
+                    <td>${getTagLabel(tag)}</td>
+                    <td>${detailText}</td>
+                `;
+                detailsBody.appendChild(row);
+            });
+            
+            document.getElementById('statsResults').style.display = 'block';
+        }
+        
+        // 页面加载时初始化人员列表
+        loadPersonList();
+    </script>
+</body>
+</html>
